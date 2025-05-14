@@ -76,21 +76,41 @@ function removePlayer(index) {
 
 // 更新选手列表显示
 function updatePlayerList() {
-    const listElement = document.getElementById('currentPlayers');
-    
-    if (players.length === 0) {
-        listElement.innerHTML = '<li class="empty">暂无选手，请添加</li>';
-        return;
-    }
-    
-    listElement.innerHTML = players.map((player, index) => `
-        <li>
-            ${player}
-            <span class="remove-btn" onclick="removePlayer(${index})">×</span>
-        </li>
-    `).join('');
-}
+  const playerListElement = document.getElementById('playerList');
+  playerListElement.innerHTML = '';
 
+  // 创建容器（新增）
+  const container = document.createElement('div');
+  container.className = 'player-list-container';
+  const listElement = document.createElement('ul');
+  listElement.className = 'player-list';
+
+  players.forEach((player, index) => {
+    const playerItem = document.createElement('li');
+    playerItem.className = 'player-item';
+    
+    // 选手名字
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = player;
+    
+    // 删除按钮
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-player';
+    deleteBtn.innerHTML = '×'; // 使用×符号
+    deleteBtn.onclick = () => {
+      players.splice(index, 1);
+      updatePlayerList();
+      showToast(`已移除选手: ${player}`, 'info');
+    };
+
+    playerItem.appendChild(nameSpan);
+    playerItem.appendChild(deleteBtn);
+    listElement.appendChild(playerItem);
+  });
+
+  container.appendChild(listElement);
+  playerListElement.appendChild(container);
+}
 // 计算单打比赛场次
 function calculateSingleMatches() {
     const rounds = parseInt(document.getElementById('roundsPerPlayer').value);
