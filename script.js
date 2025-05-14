@@ -16,22 +16,53 @@ function addPlayer() {
     }
 }
 
-// 批量添加选手
-function batchAddPlayers() {
-    const input = document.getElementById('batchPlayers');
-    const names = input.value.split(',').map(name => name.trim()).filter(name => name.length > 0);
-    
-    if (names.length > 0) {
-        names.forEach(name => {
-            if (!players.includes(name)) {
-                players.push(name);
-            }
-        });
-        input.value = '';
-        updatePlayerList();
-    }
+// 增强版提示函数
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  
+  // 根据类型设置不同颜色
+  const colors = {
+    success: '#4CAF50',
+    error: '#F44336',
+    info: '#2196F3',
+    warning: '#FF9800'
+  };
+  toast.style.backgroundColor = colors[type] || colors.info;
+  
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  // 自动移除
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 2000);
 }
 
+// 修改后的批量添加函数
+function batchAddPlayers() {
+    const input = document.getElementById('batchPlayers');
+    const names = input.value.split(/[,，、\n]+/)
+        .map(name => name.trim())
+        .filter(name => name.length > 0 && !/^[,，、\n]+$/.test(name));
+    
+    if (names.length > 0) {
+        const beforeCount = players.length;
+        const newPlayers = [...new Set([...players, ...names])];
+        
+        if (newPlayers.length > beforeCount) {
+            players = newPlayers;
+            updatePlayerList();
+            showToast(`成功添加 ${newPlayers.length - beforeCount} 位选手`, 'success');
+        } else {
+            showToast('所有选手均已存在', 'warning');
+        }
+        input.value = '';
+    } else {
+        showToast('请输入有效选手名称', 'error');
+    }
+}
 // 移除选手
 function removePlayer(index) {
     players.splice(index, 1);
