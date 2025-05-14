@@ -296,4 +296,4 @@ function updatePlayerList() {
     console.error('严重错误：playerList元素未找到');
     return;
   }    updateMatchTable();
-});
+};
