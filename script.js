@@ -278,6 +278,22 @@ function clearAll() {
 
 // 初始化页面
 document.addEventListener('DOMContentLoaded', function() {
-    updatePlayerList();
-    updateMatchTable();
+  // 确保元素存在
+  if (!document.getElementById('playerList')) {
+    console.error('playerList元素不存在，正在自动创建...');
+    const div = document.createElement('div');
+    div.id = 'playerList';
+    document.body.appendChild(div);
+  }
+  
+  updatePlayerList();
+});
+
+// 修改updatePlayerList函数开头
+function updatePlayerList() {
+  const playerListElement = document.getElementById('playerList');
+  if (!playerListElement) {
+    console.error('严重错误：playerList元素未找到');
+    return;
+  }    updateMatchTable();
 });
