@@ -40,29 +40,53 @@ function showToast(message, type = 'info') {
   }, 2000);
 }
 
-// 修改后的批量添加函数
+// 增强版批量添加函数
 function batchAddPlayers() {
-    const input = document.getElementById('batchPlayers');
-    const names = input.value.split(/[,，、\n]+/)
-        .map(name => name.trim())
-        .filter(name => name.length > 0 && !/^[,，、\n]+$/.test(name));
-    
-    if (names.length > 0) {
-        const beforeCount = players.length;
-        const newPlayers = [...new Set([...players, ...names])];
-        
-        if (newPlayers.length > beforeCount) {
-            players = newPlayers;
-            updatePlayerList();
-            showToast(`成功添加 ${newPlayers.length - beforeCount} 位选手`, 'success');
-        } else {
-            showToast('所有选手均已存在', 'warning');
-        }
-        input.value = '';
-    } else {
-        showToast('请输入有效选手名称', 'error');
-    }
+  const input = document.getElementById('batchPlayers');
+  const names = input.value.split(/[,，、\n]+/)
+    .map(name => name.trim())
+    .filter(name => name && !/^[,，、\n]+$/.test(name));
+
+  if (names.length === 0) {
+    alert("请输入有效选手名称");
+    return;
+  }
+
+  const newPlayers = [...new Set(names)];
+  const addedPlayers = newPlayers.filter(name => !players.includes(name));
+  
+  if (addedPlayers.length > 0) {
+    players.push(...addedPlayers);
+    updatePlayerList();
+    alert(`成功添加 ${addedPlayers.length} 位选手`);
+  } else {
+    alert("没有新增选手");
+  }
+  input.value = '';
 }
+
+// 修复选手列表更新函数
+function updatePlayerList() {
+  const listElement = document.getElementById('playerList');
+  if (!listElement) {
+    console.error("选手列表容器未找到");
+    return;
+  }
+
+  listElement.innerHTML = players.map(player => `
+    <li class="player-item">
+      ${player}
+      <button class="delete-btn" onclick="deletePlayer('${player}')">×</button>
+    </li>
+  `).join('');
+}
+
+// 添加删除函数
+function deletePlayer(name) {
+  players = players.filter(p => p !== name);
+  updatePlayerList();
+}
+
 // 移除选手
 function removePlayer(index) {
     players.splice(index, 1);
