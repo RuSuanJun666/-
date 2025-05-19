@@ -53,65 +53,75 @@ function updateRoundsSelect() {
     }
 }
 
-// 贝格尔轮转编排法
+// 改进的贝格尔轮转编排法
 function bergerArrange(players, rounds) {
     const n = players.length;
-    if (n % 2 !== 0) {
-        players.push('轮空'); // 奇数选手时添加轮空
-    }
+    if (n < 2) return [];
     
-    const totalRounds = n - 1;
+    // 如果选手数量为奇数，添加"轮空"
+    const hasBye = n % 2 !== 0;
+    const playerList = hasBye ? [...players, '轮空'] : [...players];
+    const totalPlayers = playerList.length;
+    
     const matches = [];
+    const playerRoundMap = {}; // 记录选手在每轮的比赛情况
     
-    // 固定第一轮
-    const fixed = players[0];
-    const rotating = players.slice(1);
+    // 初始化选手轮次映射
+    playerList.forEach(player => {
+        playerRoundMap[player] = {};
+    });
     
-    for (let r = 0; r < rounds; r++) {
-        const roundNumber = r + 1;
-        const roundMatches = [];
-        
-        // 第一轮特殊处理
-        if (r === 0) {
-            for (let i = 0; i < n / 2; i++) {
-                const a = rotating[i];
-                const b = rotating[n - 2 - i];
-                if (a !== '轮空' && b !== '轮空') {
-                    roundMatches.push({
-                        round: roundNumber,
-                        playerA: a,
-                        playerB: b
-                    });
-                }
-            }
-        } else {
-            // 旋转数组
-            const last = rotating.pop();
-            rotating.unshift(last);
-            
-            // 固定选手与其他选手比赛
-            for (let i = 0; i < n / 2; i++) {
-                const a = rotating[i];
-                const b = rotating[n - 2 - i];
-                if (a !== '轮空' && b !== '轮空') {
-                    roundMatches.push({
-                        round: roundNumber,
-                        playerA: a,
-                        playerB: b
-                    });
-                }
-            }
+    // 固定第一个选手
+    const fixedPlayer = playerList[0];
+    const rotatingPlayers = playerList.slice(1);
+    
+    for (let round = 1; round <= rounds; round++) {
+        // 旋转数组
+        if (round > 1) {
+            const last = rotatingPlayers.pop();
+            rotatingPlayers.unshift(last);
         }
         
-        // 添加固定选手的比赛
-        if (fixed !== '轮空') {
-            const opponent = rotating[rotating.length - 1];
-            if (opponent !== '轮空') {
-                roundMatches.push({
-                    round: roundNumber,
-                    playerA: fixed,
-                    playerB: opponent
-                });
+        // 生成本轮对阵
+        const roundMatches = [];
+        const usedPlayers = new Set();
+        
+        // 固定选手的比赛
+        const fixedOpponent = rotatingPlayers[rotatingPlayers.length - 1];
+        if (fixedPlayer !== '轮空' && fixedOpponent !== '轮空') {
+            roundMatches.push({
+                round: round,
+                playerA: fixedPlayer,
+                playerB: fixedOpponent
+            });
+            usedPlayers.add(fixedPlayer);
+            usedPlayers.add(fixedOpponent);
+        }
+        
+        // 其他选手的比赛
+        for (let i = 0; i < Math.floor(totalPlayers / 2) - 1; i++) {
+            const playerA = rotatingPlayers[i];
+            const playerB = rotatingPlayers[totalPlayers - 2 - i];
+            
+            // 检查选手是否已在本轮比赛过
+            if (!usedPlayers.has(playerA) && !usedPlayers.has(playerB) && 
+                playerA !== '轮空' && playerB !== '轮空' && 
+                playerA !== playerB) {
+                
+                // 检查选手是否在本轮已经对阵过其他选手
+                if (!playerRoundMap[playerA][round] && !playerRoundMap[playerB][round]) {
+                    roundMatches.push({
+                        round: round,
+                        playerA: playerA,
+                        playerB: playerB
+                    });
+                    usedPlayers.add(playerA);
+                    usedPlayers.add(playerB);
+                    
+                    // 标记选手已在本轮比赛
+                    playerRoundMap[playerA][round] = true;
+                    playerRoundMap[playerB][round] = true;
+                }
             }
         }
         
@@ -278,7 +288,7 @@ function generateMatches() {
     matches = [];
     
     if (matchType === 'single') {
-        // 使用贝格尔轮转编排法生成单打比赛
+        // 使用改进的贝格尔轮转编排法生成单打比赛
         const bergerMatches = bergerArrange(players, rounds);
         
         bergerMatches.forEach((match, index) => {
