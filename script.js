@@ -77,41 +77,74 @@ function showToast(message, type = 'info') {
   }, 2000);
 }
 
-// 选手管理功能 - 全新实现
+// 选手管理功能 - 安全版本
 document.addEventListener('DOMContentLoaded', function() {
-    // 初始化选手列表显示
+    // 获取元素（添加null检查）
     const playerList = document.getElementById('currentPlayerList');
+    const addBtn = document.getElementById('addPlayerBtn');
+    const batchBtn = document.getElementById('batchAddBtn');
+    const nameInput = document.getElementById('playerNameInput');
+    const batchInput = document.getElementById('batchPlayerInput');
+
+    // 元素存在性检查
+    if(!playerList || !addBtn || !batchBtn || !nameInput || !batchInput) {
+        console.error('缺少必要的HTML元素！请检查：');
+        console.log('- currentPlayerList:', !!playerList);
+        console.log('- addPlayerBtn:', !!addBtn);
+        console.log('- batchAddBtn:', !!batchBtn);
+        console.log('- playerNameInput:', !!nameInput);
+        console.log('- batchPlayerInput:', !!batchInput);
+        return;
+    }
+
+    // 初始化空列表提示
     if(playerList.children.length === 0) {
         playerList.innerHTML = '<div class="no-players">暂无选手，请添加</div>';
     }
 
-    // 单个添加功能
-    document.getElementById('addPlayerBtn').addEventListener('click', function() {
-        const name = document.getElementById('playerNameInput').value.trim();
+    // 事件绑定
+    addBtn.addEventListener('click', addSinglePlayer);
+    batchBtn.addEventListener('click', batchAddPlayers);
+    nameInput.addEventListener('keypress', function(e) {
+        if(e.key === 'Enter') addSinglePlayer();
+    });
+
+    function addSinglePlayer() {
+        const name = nameInput.value.trim();
         if(name) {
-            addPlayer(name);
-            document.getElementById('playerNameInput').value = '';
+            addPlayerToList(name);
+            nameInput.value = '';
         }
-    });
-    
-    // 批量添加功能
-    document.getElementById('batchAddBtn').addEventListener('click', function() {
-        const namesInput = document.getElementById('batchPlayerInput').value.trim();
+    }
+
+    function batchAddPlayers() {
+        const namesInput = batchInput.value.trim();
         if(namesInput) {
-            const names = namesInput.split(/[,，、\n]+/).map(name => name.trim()).filter(name => name);
-            batchAddPlayers(names);
-            document.getElementById('batchPlayerInput').value = '';
+            const names = namesInput.split(',').map(name => name.trim()).filter(name => name);
+            names.forEach(name => addPlayerToList(name));
+            batchInput.value = '';
         }
-    });
-    
-    // 回车键添加支持
-    document.getElementById('playerNameInput').addEventListener('keypress', function(e) {
-        if(e.key === 'Enter') {
-            const name = document.getElementById('playerNameInput').value.trim();
-            if(name) {
-                addPlayer(name);
-                document.getElementById('playerNameInput').value = '';
+    }
+
+    function addPlayerToList(name) {
+        if(playerList.innerHTML.includes('暂无选手')) {
+            playerList.innerHTML = '';
+        }
+        
+        const playerItem = document.createElement('div');
+        playerItem.className = 'player-item';
+        playerItem.innerHTML = `
+            <span>${name}</span>
+            <span class="delete-player">×</span>
+        `;
+        
+        playerList.appendChild(playerItem);
+        
+        playerItem.querySelector('.delete-player').addEventListener('click', function() {
+            playerItem.remove();
+            if(playerList.children.length === 0) {
+                playerList.innerHTML = '<div class="no-players">暂无选手，请添加</div>';
             }
-        }
-    });
+        });
+    }
 });

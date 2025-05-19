@@ -14,19 +14,19 @@
         <div class="section">
             <h2>选手管理</h2>
             <div class="input-group">
-                <input type="text" id="newPlayer" placeholder="输入选手姓名">
-                <button onclick="addPlayer()">添加选手</button>
+                <input type="text" id="playerNameInput" placeholder="输入选手姓名">
+                <button id="addPlayerBtn">添加选手</button>
             </div>
             <div class="input-group">
-                <textarea id="batchPlayers" placeholder="批量添加（用逗号分隔）"></textarea>
-                <button onclick="batchAddPlayers()">批量添加</button>
+                <textarea id="batchPlayerInput" placeholder="批量添加（用逗号分隔）"></textarea>
+                <button id="batchAddBtn">批量添加</button>
             </div>
-			<div id="playerList"></div>
-			<div class="player-list-container">
-			  <h3>当前选手列表</h3>
-			  <ul id="playerList" class="player-list"></ul>
-                    <li class="empty">暂无选手，请添加</li>
-                </ul>
+            
+            <div class="player-list-container">
+                <h3>当前选手列表</h3>
+                <div id="currentPlayerList">
+                    <div class="no-players">暂无选手，请添加</div>
+                </div>
             </div>
         </div>
         
