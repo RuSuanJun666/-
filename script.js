@@ -276,6 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 生成比赛对阵
+        // 单打比赛逻辑（保持不变）
 function generateMatches() {
     if (players.length < 2) {
         showToast("至少需要2位选手才能生成比赛", 'error');
@@ -304,47 +305,37 @@ function generateMatches() {
             });
         });
     } else {
-        // 改进的双打比赛逻辑
+        // 双打比赛逻辑
         if (players.length < 4) {
             showToast('双打比赛至少需要4名选手！', 'error');
             return false;
         }
-
-        const totalRounds = Math.ceil((players.length * rounds) / 4); // 每场双打比赛的轮数
-        const playerStats = {};
         
-        players.forEach(player => playerStats[player] = { matches: 0 });
-
-        for (let i = 0; i < totalRounds; i++) {
-            let shuffledPlayers = [...players].sort(() => 0.5 - Math.random());
-            for (let j = 0; j < shuffledPlayers.length; j += 4) {
-                if (j + 3 < shuffledPlayers.length) {
-                    let teamA = `${shuffledPlayers[j]} & ${shuffledPlayers[j + 1]}`;
-                    let teamB = `${shuffledPlayers[j + 2]} & ${shuffledPlayers[j + 3]}`;
-
-                    if (playerStats[shuffledPlayers[j]].matches < rounds / 2 &&
-                        playerStats[shuffledPlayers[j + 1]].matches < rounds / 2 &&
-                        playerStats[shuffledPlayers[j + 2]].matches < rounds / 2 &&
-                        playerStats[shuffledPlayers[j + 3]].matches < rounds / 2) {
-
-                        matches.push({
-                            id: Date.now() + matches.length,
-                            matchNumber: matches.length + 1,
-                            playerA: teamA,
-                            playerB: teamB,
-                            scoreA: 0,
-                            scoreB: 0,
-                            completed: false,
-                            round: Math.floor(i / (players.length / 4)) + 1
-                        });
-
-                        playerStats[shuffledPlayers[j]].matches++;
-                        playerStats[shuffledPlayers[j + 1]].matches++;
-                        playerStats[shuffledPlayers[j + 2]].matches++;
-                        playerStats[shuffledPlayers[j + 3]].matches++;
-                    }
+        const totalMatches = Math.ceil((players.length / 2) * rounds);
+        
+        for (let i = 0; i < totalMatches; i++) {
+            const shuffled = [...players].sort(() => 0.5 - Math.random());
+            let playerA = `${shuffled[0]} & ${shuffled[1]}`;
+            let playerB = `${shuffled[2]} & ${shuffled[3]}`;
+            
+            if (players.length > 4) {
+                const nextIndex = 4 + (i % Math.floor((players.length - 4) / 2)) * 2;
+                if (nextIndex + 1 < players.length) {
+                    playerA = `${shuffled[nextIndex]} & ${shuffled[nextIndex + 1]}`;
+                    playerB = `${shuffled[(nextIndex + 2) % players.length]} & ${shuffled[(nextIndex + 3) % players.length]}`;
                 }
             }
+            
+            matches.push({
+                id: Date.now() + i,
+                matchNumber: i + 1,
+                playerA: playerA,
+                playerB: playerB,
+                scoreA: 0,
+                scoreB: 0,
+                completed: false,
+                round: Math.floor(i / (players.length / 2)) + 1
+            });
         }
     }
     
