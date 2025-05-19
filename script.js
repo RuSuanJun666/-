@@ -4,16 +4,15 @@ let matches = [];
 
 // 添加单个选手
 function addPlayer() {
-    const input = document.getElementById('newPlayer');
-    const name = input.value.trim();
-    
-    if (name && !players.includes(name)) {
-        players.push(name);
-        input.value = '';
-        updatePlayerList();
-    } else if (players.includes(name)) {
-        alert('该选手已存在！');
+  const playerName = document.getElementById('playerName').value.trim();
+  if (playerName && !players.includes(playerName)) {
+    players.push(playerName);
+    updatePlayerList();
+    if (matches.length > 0) {
+      generateMatches(); // 保持逻辑一致
     }
+    document.getElementById('playerName').value = '';
+  }
 }
 
 // 增强版提示函数
@@ -45,22 +44,24 @@ function batchAddPlayers() {
   const input = document.getElementById('batchPlayers');
   const names = input.value.split(/[,，、\n]+/)
     .map(name => name.trim())
-    .filter(name => name && !/^[,，、\n]+$/.test(name));
+    .filter(name => name.length > 0); // 新增空值过滤
 
-  if (names.length === 0) {
-    alert("请输入有效选手名称");
-    return;
-  }
+  let addedCount = 0;
+  names.forEach(name => {
+    if (!players.includes(name)) {
+      players.push(name);
+      addedCount++;
+    }
+  });
 
-  const newPlayers = [...new Set(names)];
-  const addedPlayers = newPlayers.filter(name => !players.includes(name));
-  
-  if (addedPlayers.length > 0) {
-    players.push(...addedPlayers);
+  if (addedCount > 0) {
     updatePlayerList();
-    alert(`成功添加 ${addedPlayers.length} 位选手`);
+    if (matches.length > 0) {
+      generateMatches(); // 关键修复：自动重新生成对阵
+    }
+    alert(`成功添加 ${addedCount} 位新选手`);
   } else {
-    alert("没有新增选手");
+    alert("没有新增有效选手");
   }
   input.value = '';
 }
@@ -155,11 +156,13 @@ function calculateDoubleMatches() {
 
 // 生成随机比赛对阵
 function generateMatches() {
-    if (players.length < 2) {
-        alert('至少需要2名选手才能生成比赛！');
-        return;
-    }
-    
+  if (players.length < 2) {
+    alert("至少需要2位选手才能生成比赛");
+    return false;
+  }
+  
+  matches = []; // 清空旧赛程
+  
     const matchType = document.getElementById('matchType').value;
     let totalMatches;
     
@@ -173,8 +176,6 @@ function generateMatches() {
         totalMatches = calculateDoubleMatches();
     }
     
-    // 清空现有比赛
-    matches = [];
     
     // 生成新比赛
     for (let i = 0; i < totalMatches; i++) {
@@ -217,8 +218,9 @@ function generateMatches() {
         });
     }
     
-    updateMatchTable();
-}
+  updateMatchList(); // 新增：更新DOM显示
+  return true;      // 新增：返回成功状态
+  }
 
 // 更新比赛表格
 function updateMatchTable() {
