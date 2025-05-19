@@ -6,13 +6,8 @@ let matches = [];
 function calculateRoundsOptions(playerCount) {
     if (playerCount < 2) return [];
     
-    // 单循环比赛轮次
     const singleRound = playerCount - 1;
-    
-    // 双循环比赛轮次
     const doubleRound = (playerCount - 1) * 2;
-    
-    // 根据人数推荐的轮次
     let recommendedRound = singleRound;
     if (playerCount > 4) {
         recommendedRound = Math.ceil(singleRound * 0.75); // 75%的单循环轮次
@@ -47,7 +42,6 @@ function updateRoundsSelect() {
         select.appendChild(option);
     });
     
-    // 默认选择推荐轮次
     if (options.length >= 3) {
         select.value = options[2].value;
     }
@@ -58,35 +52,29 @@ function bergerArrange(players, rounds) {
     const n = players.length;
     if (n < 2) return [];
     
-    // 如果选手数量为奇数，添加"轮空"
     const hasBye = n % 2 !== 0;
     const playerList = hasBye ? [...players, '轮空'] : [...players];
     const totalPlayers = playerList.length;
     
     const matches = [];
-    const playerRoundMap = {}; // 记录选手在每轮的比赛情况
+    const playerRoundMap = {};
     
-    // 初始化选手轮次映射
     playerList.forEach(player => {
         playerRoundMap[player] = {};
     });
     
-    // 固定第一个选手
     const fixedPlayer = playerList[0];
     const rotatingPlayers = playerList.slice(1);
     
     for (let round = 1; round <= rounds; round++) {
-        // 旋转数组
         if (round > 1) {
             const last = rotatingPlayers.pop();
             rotatingPlayers.unshift(last);
         }
         
-        // 生成本轮对阵
         const roundMatches = [];
         const usedPlayers = new Set();
         
-        // 固定选手的比赛
         const fixedOpponent = rotatingPlayers[rotatingPlayers.length - 1];
         if (fixedPlayer !== '轮空' && fixedOpponent !== '轮空') {
             roundMatches.push({
@@ -98,17 +86,13 @@ function bergerArrange(players, rounds) {
             usedPlayers.add(fixedOpponent);
         }
         
-        // 其他选手的比赛
         for (let i = 0; i < Math.floor(totalPlayers / 2) - 1; i++) {
             const playerA = rotatingPlayers[i];
             const playerB = rotatingPlayers[totalPlayers - 2 - i];
             
-            // 检查选手是否已在本轮比赛过
             if (!usedPlayers.has(playerA) && !usedPlayers.has(playerB) && 
                 playerA !== '轮空' && playerB !== '轮空' && 
                 playerA !== playerB) {
-                
-                // 检查选手是否在本轮已经对阵过其他选手
                 if (!playerRoundMap[playerA][round] && !playerRoundMap[playerB][round]) {
                     roundMatches.push({
                         round: round,
@@ -118,7 +102,6 @@ function bergerArrange(players, rounds) {
                     usedPlayers.add(playerA);
                     usedPlayers.add(playerB);
                     
-                    // 标记选手已在本轮比赛
                     playerRoundMap[playerA][round] = true;
                     playerRoundMap[playerB][round] = true;
                 }
@@ -137,7 +120,7 @@ function addPlayer(name) {
     if (playerName && !players.includes(playerName)) {
         players.push(playerName);
         updatePlayerList();
-        updateRoundsSelect(); // 更新轮次选择
+        updateRoundsSelect();
         if (matches.length > 0) {
             generateMatches();
         }
@@ -168,7 +151,7 @@ function batchAddPlayers(namesText) {
 
     if (addedCount > 0) {
         updatePlayerList();
-        updateRoundsSelect(); // 更新轮次选择
+        updateRoundsSelect();
         if (matches.length > 0) {
             generateMatches();
         }
@@ -210,7 +193,7 @@ function removePlayer(index) {
     const removedPlayer = players[index];
     players.splice(index, 1);
     updatePlayerList();
-    updateRoundsSelect(); // 更新轮次选择
+    updateRoundsSelect();
     if (matches.length > 0) {
         generateMatches();
     }
@@ -277,8 +260,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 生成比赛对阵
 function generateMatches() {
-    if (players.length < 2) {
-        showToast("至少需要2位选手才能生成比赛", 'error');
+    if (players.length < 4) {
+        showToast("双打比赛至少需要4位选手！", 'error');
         return false;
     }
     
@@ -288,7 +271,6 @@ function generateMatches() {
     matches = [];
     
     if (matchType === 'single') {
-        // 使用改进的贝格尔轮转编排法生成单打比赛
         const bergerMatches = bergerArrange(players, rounds);
         
         bergerMatches.forEach((match, index) => {
@@ -304,118 +286,50 @@ function generateMatches() {
             });
         });
     } else {
-// 双打比赛编排算法
-function generateDoublesMatches(players) {
-    if (players.length < 4) {
-        alert("双打比赛至少需要4名选手");
-        return [];
-    }
-
-    const numPlayers = players.length;
-    let rounds;
-    let matchesPerPlayer;
-
-    // 根据选手人数确定轮次和每人比赛场数
-    if (numPlayers === 6) {
-        rounds = 3; // 可以选择3轮(每人4场)或5轮(每人6场)或7轮(每人10场)
-        matchesPerPlayer = 4;
-    } else if (numPlayers === 7) {
-        rounds = 4; // 可以选择4轮(每人8场)或6轮(每人12场)
-        matchesPerPlayer = 8;
-    } else {
-        // 其他人数: 比赛场数 = numPlayers*(numPlayers-1)/4
-        rounds = Math.ceil((numPlayers - 1) / 2);
-        matchesPerPlayer = numPlayers - 1;
-    }
-
-    // 创建选手对
-    const pairs = [];
-    for (let i = 0; i < numPlayers; i++) {
-        for (let j = i + 1; j < numPlayers; j++) {
-            pairs.push([players[i], players[j]]);
-        }
-    }
-
-    // 贝格尔轮转法编排
-    const matches = [];
-    const fixedPlayer = players[0];
-    let rotatingPlayers = players.slice(1);
-
-    for (let round = 0; round < rounds; round++) {
-        // 固定第一选手，其他选手轮转
-        if (round > 0) {
-            // 贝格尔轮转法：将最后一个选手移到第二位
-            const last = rotatingPlayers.pop();
-            rotatingPlayers.splice(1, 0, last);
-        }
-
-        // 创建本轮比赛
-        for (let i = 0; i < Math.floor(numPlayers / 2); i++) {
-            const pair1 = [fixedPlayer, rotatingPlayers[i]];
-            const pair2Index = (i + Math.floor(numPlayers / 2)) % rotatingPlayers.length;
-            const pair2 = [rotatingPlayers[pair2Index], 
-                          rotatingPlayers[(pair2Index + 1) % rotatingPlayers.length]];
-            
-            // 确保每对选手组合次数均衡
-            if (round === 0 || !hasPlayedBefore(matches, pair1, pair2)) {
-                matches.push({
-                    round: round + 1,
-                    teamA: pair1.join(" & "),
-                    teamB: pair2.join(" & "),
-                    scoreA: 0,
-                    scoreB: 0
-                });
-            }
-        }
-    }
-
-    return matches;
-}
-
-// 检查两队是否已经比赛过
-function hasPlayedBefore(matches, team1, team2) {
-    return matches.some(match => {
-        const existingTeams = [
-            match.teamA.split(" & ").sort(),
-            match.teamB.split(" & ").sort()
-        ];
-        const newTeams = [
-            [...team1].sort(),
-            [...team2].sort()
-        ];
+        // 双打比赛逻辑
+        const matchCount = Math.ceil((players.length / 2) * rounds);
+        const playerStats = {};
         
-        return (arraysEqual(existingTeams[0], newTeams[0]) && arraysEqual(existingTeams[1], newTeams[1])) ||
-               (arraysEqual(existingTeams[0], newTeams[1]) && arraysEqual(existingTeams[1], newTeams[0]));
-    });
-}
+        // 初始化每个选手的对战计数
+        players.forEach(player => {
+            playerStats[player] = { played: 0, paired: [] };
+        });
 
-// 辅助函数：比较两个数组是否相同
-function arraysEqual(a, b) {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-        if (a[i] !== b[i]) return false;
+        for (let i = 0; i < matchCount; i++) {
+            const shuffled = [...players].sort(() => 0.5 - Math.random());
+            let playerA = `${shuffled[0]} & ${shuffled[1]}`;
+            let playerB = `${shuffled[2]} & ${shuffled[3]}`;
+            
+            // 确保组合的合理性
+            if (playerStats[shuffled[0]].paired.includes(shuffled[1]) ||
+                playerStats[shuffled[1]].paired.includes(shuffled[0]) ||
+                playerStats[shuffled[2]].paired.includes(shuffled[3]) ||
+                playerStats[shuffled[3]].paired.includes(shuffled[2])) {
+                continue; // 已经配对，跳过
+            }
+
+            // 更新配对记录
+            playerStats[shuffled[0]].paired.push(shuffled[1]);
+            playerStats[shuffled[1]].paired.push(shuffled[0]);
+            playerStats[shuffled[2]].paired.push(shuffled[3]);
+            playerStats[shuffled[3]].paired.push(shuffled[2]);
+            
+            matches.push({
+                id: Date.now() + i,
+                matchNumber: i + 1,
+                playerA: playerA,
+                playerB: playerB,
+                scoreA: 0,
+                scoreB: 0,
+                completed: false,
+                round: Math.floor(i / (players.length / 2)) + 1
+            });
+        }
     }
+    
+    updateMatchTable();
     return true;
 }
-
-// 生成比赛对阵表
-function generateDoublesSchedule() {
-    const playerNames = getPlayerNames(); // 从界面获取选手名单
-    const matches = generateDoublesMatches(playerNames);
-    
-    // 清空现有比赛
-    clearMatches();
-    
-    // 添加新比赛
-    matches.forEach(match => {
-        addMatchToTable(match.round, match.teamA, match.teamB);
-    });
-}
-
-// 示例使用
-const players = ["选手1", "选手2", "选手3", "选手4", "选手5", "选手6"];
-const doublesMatches = generateDoublesMatches(players);
-console.log(doublesMatches);
 
 // 更新比赛表格
 function updateMatchTable() {
@@ -437,8 +351,7 @@ function updateMatchTable() {
         `;
         return;
     }
-    
-    // 按轮次分组
+
     const rounds = {};
     matches.forEach(match => {
         if (!rounds[match.round]) {
@@ -446,8 +359,7 @@ function updateMatchTable() {
         }
         rounds[match.round].push(match);
     });
-    
-    // 生成表格内容
+
     let html = '';
     Object.keys(rounds).sort().forEach(round => {
         html += `<tr class="round-header"><td colspan="6">第 ${round} 轮</td></tr>`;
@@ -478,7 +390,7 @@ function updateMatchTable() {
             `;
         });
     });
-    
+
     tbody.innerHTML = html;
 }
 
@@ -538,7 +450,6 @@ function getPlayerStats() {
     
     matches.forEach(match => {
         if (match.completed) {
-            // 单打比赛统计
             if (match.playerA.indexOf('&') === -1 && match.playerB.indexOf('&') === -1) {
                 stats[match.playerA].matches++;
                 stats[match.playerB].matches++;
@@ -586,7 +497,6 @@ function showPlayerStats() {
     if (statsContainer) {
         statsContainer.innerHTML = html;
     } else {
-        // 如果没有统计容器，创建一个临时弹窗显示
         const popup = document.createElement('div');
         popup.className = 'stats-popup';
         popup.innerHTML = `
