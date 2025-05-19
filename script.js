@@ -248,15 +248,63 @@ function clearAll() {
   }
 }
 
-// 初始化页面
+// 选手管理功能 - 全新实现
 document.addEventListener('DOMContentLoaded', function() {
-  // 确保元素存在
-  if (!document.getElementById('playerList')) {
-    const div = document.createElement('div');
-    div.id = 'playerList';
-    document.body.appendChild(div);
-  }
-  
-  updatePlayerList();
-  updateMatchTable();
+    // 初始化选手列表显示
+    const playerList = document.getElementById('currentPlayerList');
+    if(playerList.children.length === 0) {
+        playerList.innerHTML = '<div class="no-players">暂无选手，请添加</div>';
+    }
+
+    // 单个添加功能
+    document.getElementById('addPlayerBtn').addEventListener('click', addSinglePlayer);
+    
+    // 批量添加功能
+    document.getElementById('batchAddBtn').addEventListener('click', batchAddPlayers);
+    
+    // 回车键添加支持
+    document.getElementById('playerNameInput').addEventListener('keypress', function(e) {
+        if(e.key === 'Enter') addSinglePlayer();
+    });
 });
+
+function addSinglePlayer() {
+    const name = document.getElementById('playerNameInput').value.trim();
+    if(name) {
+        addPlayerToList(name);
+        document.getElementById('playerNameInput').value = '';
+    }
+}
+
+function batchAddPlayers() {
+    const namesInput = document.getElementById('batchPlayerInput').value.trim();
+    if(namesInput) {
+        const names = namesInput.split(',').map(name => name.trim()).filter(name => name);
+        names.forEach(name => addPlayerToList(name));
+        document.getElementById('batchPlayerInput').value = '';
+    }
+}
+
+function addPlayerToList(name) {
+    const playerList = document.getElementById('currentPlayerList');
+    
+    if(playerList.innerHTML.includes('暂无选手')) {
+        playerList.innerHTML = '';
+    }
+    
+    const playerItem = document.createElement('div');
+    playerItem.className = 'player-item';
+    playerItem.innerHTML = `
+        <span>${name}</span>
+        <span class="delete-player">×</span>
+    `;
+    
+    playerList.appendChild(playerItem);
+    
+    playerItem.querySelector('.delete-player').addEventListener('click', function() {
+        playerItem.remove();
+        if(playerList.children.length === 0) {
+            playerList.innerHTML = '<div class="no-players">暂无选手，请添加</div>';
+        }
+    });
+}
